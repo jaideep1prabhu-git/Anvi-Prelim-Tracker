@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Anvi's ICSE Prelims Tracker & Scheduler</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-20">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-md">
+          🎓
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Anvi's Prelims Tracker</h1>
+          <p class="text-xs text-slate-500 font-medium">ICSE 10th Target 2027 • Genesis & School</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button id="btnOpenEvent" type="button" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition cursor-pointer">
+          📅 <span class="hidden sm:inline">Add Event</span>
+        </button>
+        <button id="btnOpenExam" type="button" class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-sm cursor-pointer">
+          ➕ <span>Add Exam</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="max-w-4xl mx-auto px-4 pt-1 flex border-t border-slate-100">
+      <button id="tabBtnExams" class="flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1 transition">
+        🏆 Prelims & Marks (<span id="badgeExamsCount">0</span>)
+      </button>
+      <button id="tabBtnEvents" class="flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1 transition">
+        🗓️ Events & Calendar (<span id="badgeEventsCount">0</span>)
+      </button>
+      <button id="tabBtnAnalytics" class="flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1 transition">
+        📊 Performance %
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN BODY -->
+  <main class="max-w-4xl mx-auto px-4 py-5 space-y-6">
+
+    <!-- VIEW 1: PRELIMS -->
+    <section id="viewExams" class="space-y-5">
+      <!-- STATS -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total Prelims</p>
+          <p id="kpiTotalExams" class="text-2xl font-bold text-slate-900 mt-0.5">0</p>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Attended</p>
+          <p id="kpiAttended" class="text-2xl font-bold text-emerald-600 mt-0.5">0</p>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Overall Score</p>
+          <p id="kpiAvgPercent" class="text-2xl font-black text-indigo-600 mt-0.5">0%</p>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Upcoming</p>
+          <p id="kpiUpcoming" class="text-2xl font-bold text-amber-600 mt-0.5">0</p>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+          <button id="btnFilterAll" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm">All</button>
+          <button id="btnFilterClasses" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900">Genesis Classes</button>
+          <button id="btnFilterSchool" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900">School</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="filterSubject" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-medium text-slate-700 outline-none">
+            <option value="all">All Subjects</option>
+          </select>
+          <select id="filterStatus" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-medium text-slate-700 outline-none">
+            <option value="all">All Status</option>
+            <option value="Upcoming">Upcoming</option>
+            <option value="Attended">Attended</option>
+            <option value="Missed">Missed</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- CARD CONTAINER -->
+      <div id="examsListContainer" class="space-y-3"></div>
+    </section>
+
+    <!-- VIEW 2: EVENTS -->
+    <section id="viewEvents" class="space-y-5 hidden">
+      <div class="bg-indigo-600 p-4 rounded-xl text-white shadow-sm flex items-center justify-between">
+        <div>
+          <h2 class="font-bold text-base">School & Calendar Events</h2>
+          <p class="text-xs text-indigo-100 mt-0.5">Track Annual Day, Sports Day, Practicals, and deadlines</p>
+        </div>
+        <button id="btnSubAddEvent" class="bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">➕ Add</button>
+      </div>
+      <div id="eventsListContainer" class="space-y-3"></div>
+    </section>
+
+    <!-- VIEW 3: ANALYTICS -->
+    <section id="viewAnalytics" class="space-y-5 hidden">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">📈 Subject-Wise Score Breakdown</h3>
+        <p class="text-xs text-slate-500">Calculated across exams marked as Attended.</p>
+        <div id="subjectAnalyticsContainer" class="space-y-3 pt-2"></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-indigo-600 uppercase">Genesis Classes Prelims</span>
+          <p id="anaClassesScore" class="text-2xl font-black text-slate-900 mt-1">0%</p>
+          <p id="anaClassesRatio" class="text-xs text-slate-500 mt-0.5">0 / 0 marks scored</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-emerald-600 uppercase">School Prelims</span>
+          <p id="anaSchoolScore" class="text-2xl font-black text-slate-900 mt-1">0%</p>
+          <p id="anaSchoolRatio" class="text-xs text-slate-500 mt-0.5">0 / 0 marks scored</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER CONTROLS -->
+    <div class="pt-6 border-t border-slate-200 text-center flex flex-wrap items-center justify-center gap-3">
+      <button id="btnExport" class="text-xs text-slate-500 hover:text-indigo-600 font-medium">📥 Backup Data</button>
+      <span class="text-slate-300">•</span>
+      <button id="btnForceReset" class="text-xs text-indigo-600 font-bold hover:underline cursor-pointer">🔄 Load Genesis & School Demo Prelims</button>
+    </div>
+
+  </main>
+
+  <!-- ================= MODAL: ADD/EDIT EXAM ================= -->
+  <div id="examModal" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 id="examModalTitle" class="font-bold text-slate-900 text-base">Schedule Prelim</h3>
+        <button id="btnCloseExamModal" class="text-slate-400 hover:text-slate-700 text-lg font-bold p-1">&times;</button>
+      </div>
+
+      <form id="examForm" class="p-5 space-y-4">
+        <input type="hidden" id="examId" />
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Prelim Category</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center justify-center gap-2 border border-slate-200 rounded-xl p-2.5 cursor-pointer has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50">
+              <input type="radio" name="source" value="Classes" checked class="text-indigo-600">
+              <span class="text-xs font-semibold text-slate-800">Genesis Classes</span>
+            </label>
+            <label class="flex items-center justify-center gap-2 border border-slate-200 rounded-xl p-2.5 cursor-pointer has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50">
+              <input type="radio" name="source" value="School" class="text-indigo-600">
+              <span class="text-xs font-semibold text-slate-800">School Prelim</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Subject</label>
+          <select id="examSubject" required class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none"></select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Exam Name / Title</label>
+          <input type="text" id="examTitle" required placeholder="e.g. Prelim 1, Full Test" class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Date</label>
+            <input type="date" id="examDate" required class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Time</label>
+            <input type="time" id="examTime" value="09:00" class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none" />
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-3 space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Attendance Status</label>
+            <select id="examAttended" class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none">
+              <option value="Upcoming">Upcoming (Not Conducted Yet)</option>
+              <option value="Attended">Attended (Exam Completed)</option>
+              <option value="Missed">Missed / Absent</option>
+            </select>
+          </div>
+
+          <div id="marksGroup" class="grid grid-cols-2 gap-2 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 hidden">
+            <div>
+              <label class="block text-[11px] font-bold text-indigo-900 uppercase tracking-wider mb-1">Marks Scored</label>
+              <input type="number" step="0.5" min="0" id="examMarksScored" placeholder="e.g. 72" class="w-full text-xs sm:text-sm bg-white border border-indigo-200 rounded-lg p-2 font-bold text-slate-800 outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-indigo-900 uppercase tracking-wider mb-1">Out Of</label>
+              <input type="number" step="0.5" min="1" id="examMarksTotal" placeholder="80 or 100" class="w-full text-xs sm:text-sm bg-white border border-indigo-200 rounded-lg p-2 font-bold text-slate-800 outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Notes / Syllabus (Optional)</label>
+          <input type="text" id="examNotes" placeholder="e.g. Bring Geometry box, Ch 1-5" class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none" />
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" id="btnCancelExam" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm">Save Prelim</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ADD/EDIT EVENT ================= -->
+  <div id="eventModal" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 id="eventModalTitle" class="font-bold text-slate-900 text-base">Add School Event / Activity</h3>
+        <button id="btnCloseEventModal" class="text-slate-400 hover:text-slate-700 text-lg font-bold p-1">&times;</button>
+      </div>
+
+      <form id="eventForm" class="p-5 space-y-4">
+        <input type="hidden" id="eventId" />
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Event Type</label>
+          <select id="eventType" class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none">
+            <option value="School Event">School Event (Annual Day / Sports Day)</option>
+            <option value="Practical">Science Practical / Viva Exam</option>
+            <option value="Project Submission">ICSE Project / Internal Assessment</option>
+            <option value="Holiday">Study Leave / Holiday</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Event Title</label>
+          <input type="text" id="eventTitle" required placeholder="e.g. Annual Sports Day" class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Date</label>
+            <input type="date" id="eventDate" required class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Time</label>
+            <input type="time" id="eventTime" value="08:30" class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Details / Location</label>
+          <input type="text" id="eventDetails" placeholder="e.g. School Ground" class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-800 outline-none" />
+        </div>
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" id="btnCancelEvent" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm">Save Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const CLASSES_SUBS = ["Physics", "Chemistry", "Mathematics", "English", "Computers"];
+    const SCHOOL_SUBS = ["Physics", "Chemistry", "Mathematics", "English", "Computers", "Biology", "Hindi / 2nd Lang", "History & Civics", "Geography", "Commercial Applications"];
+
+    const INITIAL_DEMO_EXAMS = [
+      { id: "e1", source: "Classes", subject: "Physics", title: "Prelim 1 - Full Portion", date: "2026-11-10", time: "10:00", attended: "Upcoming", marksScored: null, marksTotal: 80, notes: "Genesis Thane Centre" },
+      { id: "e2", source: "Classes", subject: "Mathematics", title: "Prelim 1 - Algebra & Geometry", date: "2026-11-14", time: "10:00", attended: "Upcoming", marksScored: null, marksTotal: 80, notes: "Shares, Linear Inequations, Circles" },
+      { id: "e3", source: "Classes", subject: "Computers", title: "Prelim 1 - Java Applications", date: "2026-11-18", time: "10:00", attended: "Upcoming", marksScored: null, marksTotal: 100, notes: "Arrays, Strings, Functions" },
+      { id: "e4", source: "Classes", subject: "Chemistry", title: "Prelim 1 - Organic & Mole", date: "2026-11-22", time: "10:00", attended: "Upcoming", marksScored: null, marksTotal: 80, notes: "Formulas & Equations" },
+      { id: "e5", source: "School", subject: "English", title: "School Prelim 1 - Language & Lit", date: "2026-11-28", time: "08:30", attended: "Upcoming", marksScored: null, marksTotal: 80, notes: "Julius Caesar & Poems" }
+    ];
+
+    const INITIAL_DEMO_EVENTS = [
+      { id: "ev1", type: "School Event", title: "Annual Sports Day", date: "2026-12-05", time: "08:00", details: "School Ground" },
+      { id: "ev2", type: "Project Submission", title: "Computers Internal Project", date: "2026-11-20", time: "09:00", details: "Java Practical Journal" }
+    ];
+
+    let exams = [];
+    let events = [];
+    let activeFilter = 'all';
+
+    function loadData() {
+      try {
+        const stored = localStorage.getItem('anvi_v5_exams');
+        if (stored) {
+          exams = JSON.parse(stored);
+        } else {
+          exams = [...INITIAL_DEMO_EXAMS];
+          saveExams();
+        }
+      } catch (err) {
+        exams = [...INITIAL_DEMO_EXAMS];
+      }
+
+      try {
+        const storedEv = localStorage.getItem('anvi_v5_events');
+        if (storedEv) {
+          events = JSON.parse(storedEv);
+        } else {
+          events = [...INITIAL_DEMO_EVENTS];
+          saveEvents();
+        }
+      } catch (err) {
+        events = [...INITIAL_DEMO_EVENTS];
+      }
+    }
+
+    function saveExams() {
+      localStorage.setItem('anvi_v5_exams', JSON.stringify(exams));
+    }
+
+    function saveEvents() {
+      localStorage.setItem('anvi_v5_events', JSON.stringify(events));
+    }
+
+    function updateSubjectOptions() {
+      const selectedSource = document.querySelector('input[name="source"]:checked') ? document.querySelector('input[name="source"]:checked').value : 'Classes';
+      const subSelect = document.getElementById('examSubject');
+      const list = selectedSource === 'Classes' ? CLASSES_SUBS : SCHOOL_SUBS;
+      subSelect.innerHTML = list.map(s => '<option value="' + s + '">' + s + '</option>').join('');
+    }
+
+    function buildFilterDropdown() {
+      const filterSelect = document.getElementById('filterSubject');
+      const set = new Set([...CLASSES_SUBS, ...SCHOOL_SUBS]);
+      let options = '<option value="all">All Subjects</option>';
+      set.forEach(s => options += '<option value="' + s + '">' + s + '</option>');
+      filterSelect.innerHTML = options;
+    }
+
+    function toggleMarksInput() {
+      const isAttended = document.getElementById('examAttended').value === 'Attended';
+      const box = document.getElementById('marksGroup');
+      if (isAttended) box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function formatDate(dStr) {
+      if (!dStr) return '';
+      const parts = dStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parts[0], parts[1]-1, parts[2]);
+        return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', weekday: 'short' });
+      }
+      return dStr;
+    }
+
+    function getDaysDiff(dStr) {
+      const parts = dStr.split('-');
+      const target = new Date(parts[0], parts[1]-1, parts[2]);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      return Math.round((target - today) / (1000 * 60 * 60 * 24));
+    }
+
+    function renderExams() {
+      const list = document.getElementById('examsListContainer');
+      const subFilter = document.getElementById('filterSubject').value;
+      const statusFilter = document.getElementById('filterStatus').value;
+
+      let filtered = [...exams];
+      if (activeFilter !== 'all') filtered = filtered.filter(e => e.source === activeFilter);
+      if (subFilter !== 'all') filtered = filtered.filter(e => e.subject === subFilter);
+      if (statusFilter !== 'all') filtered = filtered.filter(e => e.attended === statusFilter);
+
+      filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+      const total = exams.length;
+      const attended = exams.filter(e => e.attended === 'Attended');
+      const upcoming = exams.filter(e => e.attended === 'Upcoming').length;
+
+      let sc = 0, tot = 0;
+      attended.forEach(e => {
+        if (e.marksScored !== null && e.marksTotal) {
+          sc += Number(e.marksScored);
+          tot += Number(e.marksTotal);
+        }
+      });
+
+      document.getElementById('kpiTotalExams').textContent = total;
+      document.getElementById('kpiAttended').textContent = attended.length;
+      document.getElementById('kpiUpcoming').textContent = upcoming;
+      document.getElementById('kpiAvgPercent').textContent = tot > 0 ? (Math.round((sc / tot) * 100) + '%') : '—';
+      document.getElementById('badgeExamsCount').textContent = exams.length;
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-500">No prelim exams scheduled yet. Click "+ Add Exam" or reload demo data below.</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(item => {
+        const diff = getDaysDiff(item.date);
+        let badge = '';
+        if (item.attended === 'Upcoming') {
+          if (diff > 1) badge = '<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">In ' + diff + ' days</span>';
+          else if (diff === 1) badge = '<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">Tomorrow!</span>';
+          else if (diff === 0) badge = '<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">Today!</span>';
+          else badge = '<span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Passed</span>';
+        }
+
+        const tag = item.source === 'Classes' 
+          ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">Genesis</span>'
+          : '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">School</span>';
+
+        let scoreTag = '';
+        if (item.attended === 'Attended') {
+          const pct = (item.marksScored !== null && item.marksTotal) ? Math.round((item.marksScored / item.marksTotal) * 100) : null;
+          scoreTag = '<div class="text-right"><span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Attended</span>' +
+            (pct !== null ? '<div class="text-xs font-black text-slate-800 mt-1">' + item.marksScored + '/' + item.marksTotal + ' <span class="text-indigo-600">(' + pct + '%)</span></div>' : '') +
+            '</div>';
+        } else if (item.attended === 'Missed') {
+          scoreTag = '<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-800">Missed</span>';
+        } else {
+          scoreTag = '<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Upcoming</span>';
+        }
+
+        return '<div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3">' +
+          '<div class="flex items-start justify-between gap-3">' +
+            '<div>' +
+              '<div class="flex items-center gap-2 flex-wrap">' + tag + '<span class="text-xs font-bold text-slate-900">' + item.subject + '</span>' + badge + '</div>' +
+              '<h4 class="text-sm sm:text-base font-bold text-slate-900 mt-1">' + item.title + '</h4>' +
+            '</div>' +
+            '<div>' + scoreTag + '</div>' +
+          '</div>' +
+          '<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-1 border-t border-slate-100">' +
+            '<span class="font-medium text-slate-700">📅 ' + formatDate(item.date) + '</span>' +
+            (item.time ? '<span>⏰ ' + item.time + '</span>' : '') +
+            (item.notes ? '<span class="truncate max-w-xs text-slate-400">📝 ' + item.notes + '</span>' : '') +
+          '</div>' +
+          '<div class="flex items-center justify-between pt-2 border-t border-slate-100">' +
+            '<div class="flex items-center gap-2">' +
+              '<button type="button" onclick="handleWhatsApp(\'' + item.id + '\')" class="text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg">💬 WhatsApp</button>' +
+              '<button type="button" onclick="handleCalendar(\'' + item.id + '\')" class="text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg">🔔 2-Day Alarm</button>' +
+            '</div>' +
+            '<div class="flex items-center gap-2">' +
+              '<button type="button" onclick="editExamItem(\'' + item.id + '\')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">Edit</button>' +
+              '<button type="button" onclick="deleteExamItem(\'' + item.id + '\')" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded">Delete</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderEvents() {
+      const container = document.getElementById('eventsListContainer');
+      document.getElementById('badgeEventsCount').textContent = events.length;
+
+      if (events.length === 0) {
+        container.innerHTML = '<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-400">No events scheduled. Click "Add Event" to add Sports Day, Annual Day, or Submissions.</div>';
+        return;
+      }
+
+      container.innerHTML = [...events].sort((a,b) => new Date(a.date) - new Date(b.date)).map(ev => {
+        const diff = getDaysDiff(ev.date);
+        let badge = diff > 1 ? ('In ' + diff + ' days') : (diff === 1 ? 'Tomorrow' : (diff === 0 ? 'Today' : 'Completed'));
+        return '<div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-2">' +
+          '<div class="flex items-start justify-between">' +
+            '<div>' +
+              '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">' + ev.type + '</span>' +
+              '<span class="text-[11px] font-bold ml-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">' + badge + '</span>' +
+              '<h4 class="text-sm font-bold text-slate-900 mt-1">' + ev.title + '</h4>' +
+            '</div>' +
+            '<button type="button" onclick="deleteEventItem(\'' + ev.id + '\')" class="text-xs text-red-500 hover:underline">Delete</button>' +
+          '</div>' +
+          '<div class="text-xs text-slate-500 pt-1 border-t border-slate-100 flex gap-4">' +
+            '<span>📅 ' + formatDate(ev.date) + '</span>' +
+            (ev.time ? '<span>⏰ ' + ev.time + '</span>' : '') +
+            (ev.details ? '<span>📍 ' + ev.details + '</span>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function renderAnalytics() {
+      const container = document.getElementById('subjectAnalyticsContainer');
+      const attended = exams.filter(e => e.attended === 'Attended' && e.marksScored !== null && e.marksTotal);
+
+      if (attended.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 p-4 bg-slate-50 rounded-xl text-center">Marks will appear here once exams are completed and marked as Attended.</p>';
+      } else {
+        const map = {};
+        attended.forEach(e => {
+          if (!map[e.subject]) map[e.subject] = { scored: 0, total: 0 };
+          map[e.subject].scored += Number(e.marksScored);
+          map[e.subject].total += Number(e.marksTotal);
+        });
+
+        container.innerHTML = Object.keys(map).map(sub => {
+          const item = map[sub];
+          const pct = Math.round((item.scored / item.total) * 100);
+          return '<div class="space-y-1">' +
+            '<div class="flex justify-between text-xs font-bold text-slate-800">' +
+              '<span>' + sub + '</span>' +
+              '<span>' + pct + '% <span class="font-normal text-slate-400">(' + item.scored + '/' + item.total + ')</span></span>' +
+            '</div>' +
+            '<div class="w-full bg-slate-100 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ' + pct + '%"></div></div>' +
+          '</div>';
+        }).join('');
+      }
+
+      const calc = (cat) => {
+        const catList = attended.filter(e => e.source === cat);
+        let s = 0, t = 0;
+        catList.forEach(e => { s += Number(e.marksScored); t += Number(e.marksTotal); });
+        return { pct: t > 0 ? (Math.round((s / t) * 100) + '%') : '—', s, t, count: catList.length };
+      };
+
+      const cl = calc('Classes');
+      document.getElementById('anaClassesScore').textContent = cl.pct;
+      document.getElementById('anaClassesRatio').textContent = cl.s + ' / ' + cl.t + ' marks (' + cl.count + ' exams)';
+
+      const sc = calc('School');
+      document.getElementById('anaSchoolScore').textContent = sc.pct;
+      document.getElementById('anaSchoolRatio').textContent = sc.s + ' / ' + sc.t + ' marks (' + sc.count + ' exams)';
+    }
+
+    // ACTIONS
+    window.handleWhatsApp = function(id) {
+      const item = exams.find(e => e.id === id);
+      if (!item) return;
+      const text = "*Prelim Alert for Anvi*\nSubject: " + item.subject + "\nExam: " + item.title + " (" + item.source + ")\nDate: " + formatDate(item.date) + " at " + (item.time || '09:00') + "\nNotes: " + (item.notes || 'None');
+      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+    };
+
+    window.handleCalendar = function(id) {
+      const item = exams.find(e => e.id === id);
+      if (!item) return;
+      const [y, m, d] = item.date.split('-');
+      const [hh, mm] = (item.time || '09:00').split(':');
+      const start = y + m + d + 'T' + hh.padStart(2,'0') + mm.padStart(2,'0') + '00';
+      const end = y + m + d + 'T' + String(Number(hh)+2).padStart(2,'0') + mm.padStart(2,'0') + '00';
+
+      const ics = [
+        'BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT',
+        'SUMMARY:[Prelim] ' + item.subject + ' - ' + item.title,
+        'DESCRIPTION:' + (item.notes || 'ICSE Prelim'),
+        'DTSTART:' + start, 'DTEND:' + end,
+        'BEGIN:VALARM', 'TRIGGER:-P2D', 'ACTION:DISPLAY', 'DESCRIPTION:Reminder: Exam in 2 days!', 'END:VALARM',
+        'END:VEVENT', 'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([ics], { type: 'text/calendar' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = item.subject + '_Prelim.ics';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+
+    window.editExamItem = function(id) {
+      const item = exams.find(e => e.id === id);
+      if (!item) return;
+      document.getElementById('examId').value = item.id;
+      document.getElementById('examModalTitle').textContent = 'Edit Prelim & Marks';
+
+      const radios = document.querySelectorAll('input[name="source"]');
+      radios.forEach(r => { r.checked = (r.value === item.source); });
+
+      updateSubjectOptions();
+      document.getElementById('examSubject').value = item.subject;
+      document.getElementById('examTitle').value = item.title;
+      document.getElementById('examDate').value = item.date;
+      document.getElementById('examTime').value = item.time || "09:00";
+      document.getElementById('examAttended').value = item.attended;
+      document.getElementById('examMarksScored').value = item.marksScored !== null ? item.marksScored : '';
+      document.getElementById('examMarksTotal').value = item.marksTotal || 80;
+      document.getElementById('examNotes').value = item.notes || '';
+
+      toggleMarksInput();
+      document.getElementById('examModal').classList.remove('hidden');
+    };
+
+    window.deleteExamItem = function(id) {
+      if (confirm('Delete this exam entry?')) {
+        exams = exams.filter(e => e.id !== id);
+        saveExams();
+        renderExams();
+      }
+    };
+
+    window.deleteEventItem = function(id) {
+      if (confirm('Delete this event?')) {
+        events = events.filter(e => e.id !== id);
+        saveEvents();
+        renderEvents();
+      }
+    };
+
+    // SETUP EVENTS
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      buildFilterDropdown();
+      updateSubjectOptions();
+      renderExams();
+
+      document.getElementById('btnOpenExam').addEventListener('click', () => {
+        document.getElementById('examForm').reset();
+        document.getElementById('examId').value = '';
+        document.getElementById('examModalTitle').textContent = 'Schedule Prelim';
+        document.querySelector('input[name="source"][value="Classes"]').checked = true;
+        updateSubjectOptions();
+        toggleMarksInput();
+        document.getElementById('examModal').classList.remove('hidden');
+      });
+
+      document.getElementById('btnCloseExamModal').addEventListener('click', () => {
+        document.getElementById('examModal').classList.add('hidden');
+      });
+      document.getElementById('btnCancelExam').addEventListener('click', () => {
+        document.getElementById('examModal').classList.add('hidden');
+      });
+
+      document.getElementById('btnOpenEvent').addEventListener('click', () => {
+        document.getElementById('eventForm').reset();
+        document.getElementById('eventId').value = '';
+        document.getElementById('eventModal').classList.remove('hidden');
+      });
+      document.getElementById('btnSubAddEvent').addEventListener('click', () => {
+        document.getElementById('eventForm').reset();
+        document.getElementById('eventId').value = '';
+        document.getElementById('eventModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseEventModal').addEventListener('click', () => {
+        document.getElementById('eventModal').classList.add('hidden');
+      });
+      document.getElementById('btnCancelEvent').addEventListener('click', () => {
+        document.getElementById('eventModal').classList.add('hidden');
+      });
+
+      document.querySelectorAll('input[name="source"]').forEach(r => {
+        r.addEventListener('change', updateSubjectOptions);
+      });
+      document.getElementById('examAttended').addEventListener('change', toggleMarksInput);
+
+      document.getElementById('filterSubject').addEventListener('change', renderExams);
+      document.getElementById('filterStatus').addEventListener('change', renderExams);
+
+      ['all', 'Classes', 'School'].forEach(src => {
+        document.getElementById('btnFilter' + (src === 'all' ? 'All' : src)).addEventListener('click', () => {
+          activeFilter = src;
+          ['all', 'Classes', 'School'].forEach(s => {
+            const btn = document.getElementById('btnFilter' + (s === 'all' ? 'All' : s));
+            btn.className = (s === src)
+              ? "px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm"
+              : "px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900";
+          });
+          renderExams();
+        });
+      });
+
+      document.getElementById('tabBtnExams').addEventListener('click', () => {
+        document.getElementById('viewExams').classList.remove('hidden');
+        document.getElementById('viewEvents').classList.add('hidden');
+        document.getElementById('viewAnalytics').classList.add('hidden');
+        document.getElementById('tabBtnExams').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1";
+        document.getElementById('tabBtnEvents').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1";
+        document.getElementById('tabBtnAnalytics').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1";
+        renderExams();
+      });
+
+      document.getElementById('tabBtnEvents').addEventListener('click', () => {
+        document.getElementById('viewExams').classList.add('hidden');
+        document.getElementById('viewEvents').classList.remove('hidden');
+        document.getElementById('viewAnalytics').classList.add('hidden');
+        document.getElementById('tabBtnExams').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1";
+        document.getElementById('tabBtnEvents').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1";
+        document.getElementById('tabBtnAnalytics').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1";
+        renderEvents();
+      });
+
+      document.getElementById('tabBtnAnalytics').addEventListener('click', () => {
+        document.getElementById('viewExams').classList.add('hidden');
+        document.getElementById('viewEvents').classList.add('hidden');
+        document.getElementById('viewAnalytics').classList.remove('hidden');
+        document.getElementById('tabBtnExams').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1";
+        document.getElementById('tabBtnEvents').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1";
+        document.getElementById('tabBtnAnalytics').className = "flex-1 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 flex items-center justify-center gap-1";
+        renderAnalytics();
+      });
+
+      document.getElementById('examForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('examId').value;
+        const source = document.querySelector('input[name="source"]:checked').value;
+        const subject = document.getElementById('examSubject').value;
+        const title = document.getElementById('examTitle').value.trim();
+        const date = document.getElementById('examDate').value;
+        const time = document.getElementById('examTime').value;
+        const attended = document.getElementById('examAttended').value;
+        const scoredRaw = document.getElementById('examMarksScored').value;
+        const totalRaw = document.getElementById('examMarksTotal').value;
+        const notes = document.getElementById('examNotes').value.trim();
+
+        const marksScored = (attended === 'Attended' && scoredRaw !== '') ? Number(scoredRaw) : null;
+        const marksTotal = totalRaw ? Number(totalRaw) : 80;
+
+        if (id) {
+          const idx = exams.findIndex(x => x.id === id);
+          if (idx > -1) exams[idx] = { ...exams[idx], source, subject, title, date, time, attended, marksScored, marksTotal, notes };
+        } else {
+          exams.push({ id: 'ex_' + Date.now(), source, subject, title, date, time, attended, marksScored, marksTotal, notes });
+        }
+
+        saveExams();
+        document.getElementById('examModal').classList.add('hidden');
+        renderExams();
+      });
+
+      document.getElementById('eventForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const type = document.getElementById('eventType').value;
+        const title = document.getElementById('eventTitle').value.trim();
+        const date = document.getElementById('eventDate').value;
+        const time = document.getElementById('eventTime').value;
+        const details = document.getElementById('eventDetails').value.trim();
+
+        events.push({ id: 'ev_' + Date.now(), type, title, date, time, details });
+        saveEvents();
+        document.getElementById('eventModal').classList.add('hidden');
+        renderEvents();
+      });
+
+      document.getElementById('btnForceReset').addEventListener('click', () => {
+        exams = [...INITIAL_DEMO_EXAMS];
+        events = [...INITIAL_DEMO_EVENTS];
+        saveExams();
+        saveEvents();
+        renderExams();
+        alert('Genesis & School demo prelims loaded successfully!');
+      });
+
+      document.getElementById('btnExport').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify({ exams, events }, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Anvi_Prelims_Backup.json';
+        a.click();
+      });
+    });
+  </script>
+</body>
+</html>
