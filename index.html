@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Anvi's ICSE 2027 Prelim Tracker & Scheduler</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons for clean, crisp icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Canvas Confetti for celebrating high scores -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              200: '#ddd6fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            },
+            accent: {
+              500: '#06b6d4',
+              600: '#0891b2',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* iOS friendly touch highlight and smooth scrolling */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #ede9fe 100%);
+      min-height: 100vh;
+    }
+    /* Custom scrollbar for desktop preview */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col min-h-screen">
+
+  <!-- Mobile Top Header -->
+  <header class="sticky top-0 z-30 glass-card border-b border-slate-200/80 shadow-sm px-4 py-3">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-accent-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+          <i class="ph-bold ph-graduation-cap text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base font-bold text-slate-800 leading-tight">Anvi's ICSE Tracker</h1>
+            <span class="text-[10px] font-semibold bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full">Target 2027</span>
+          </div>
+          <p class="text-xs text-slate-500 font-medium">Genesis & School Prelims</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-2">
+        <button onclick="openBackupModal()" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-xl transition" title="Data Backup & Sync">
+          <i class="ph ph-arrows-clockwise text-xl"></i>
+        </button>
+        <button onclick="promptAddToHome()" class="hidden md:inline-flex items-center space-x-1.5 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl hover:bg-slate-200 transition font-medium">
+          <i class="ph ph-device-mobile"></i>
+          <span>Save to Phone</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Motivational Quote Banner -->
+  <div class="max-w-4xl mx-auto w-full px-4 pt-3 pb-1">
+    <div class="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-100 rounded-2xl p-3 flex items-center justify-between text-xs text-slate-600 shadow-sm">
+      <div class="flex items-center space-x-2.5 overflow-hidden">
+        <span class="text-base flex-shrink-0">✨</span>
+        <span id="quoteText" class="truncate font-medium text-slate-700">"Consistency is the code to cracking ICSE with flying colors!"</span>
+      </div>
+      <span class="flex-shrink-0 text-[11px] font-semibold text-brand-600 bg-white/80 px-2.5 py-1 rounded-lg border border-purple-100">
+        Feb 2027 🎯
+      </span>
+    </div>
+  </div>
+
+  <!-- Main Navigation Tabs -->
+  <div class="max-w-4xl mx-auto w-full px-4 pt-3">
+    <div class="grid grid-cols-4 bg-slate-200/70 p-1 rounded-2xl text-xs font-semibold text-slate-600">
+      <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="tab-button py-2 rounded-xl transition flex flex-col sm:flex-row items-center justify-center gap-1 bg-white text-brand-700 shadow-sm">
+        <i class="ph-bold ph-chart-pie-slice text-base"></i>
+        <span>Overview</span>
+      </button>
+      <button onclick="switchTab('exams')" id="tabBtn-exams" class="tab-button py-2 rounded-xl transition flex flex-col sm:flex-row items-center justify-center gap-1 hover:text-slate-900">
+        <i class="ph-bold ph-notebook text-base"></i>
+        <span>Prelims</span>
+      </button>
+      <button onclick="switchTab('scheduler')" id="tabBtn-scheduler" class="tab-button py-2 rounded-xl transition flex flex-col sm:flex-row items-center justify-center gap-1 hover:text-slate-900">
+        <i class="ph-bold ph-calendar-check text-base"></i>
+        <span>Events</span>
+      </button>
+      <button onclick="switchTab('reminders')" id="tabBtn-reminders" class="tab-button py-2 rounded-xl transition flex flex-col sm:flex-row items-center justify-center gap-1 hover:text-slate-900">
+        <i class="ph-bold ph-whatsapp-logo text-base text-emerald-600"></i>
+        <span>WhatsApp</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content Container -->
+  <main class="max-w-4xl mx-auto w-full px-4 py-4 flex-1">
+    
+    <!-- TAB 1: DASHBOARD -->
+    <section id="view-dashboard" class="space-y-4">
+      
+      <!-- Top Metrics Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <!-- Overall Percentage -->
+        <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Overall Score</div>
+          <div class="mt-1 flex items-baseline space-x-1">
+            <span id="metric-overall-pct" class="text-2xl font-black text-brand-600">--%</span>
+          </div>
+          <p id="metric-overall-sub" class="text-[11px] text-slate-500 mt-1">From 0 exams</p>
+          <div class="absolute -right-3 -bottom-3 text-brand-500/10 text-5xl">
+            <i class="ph-bold ph-trophy"></i>
+          </div>
+        </div>
+
+        <!-- Genesis Classes Score -->
+        <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-purple-600">Genesis Classes</div>
+          <div class="mt-1 flex items-baseline space-x-1">
+            <span id="metric-classes-pct" class="text-2xl font-black text-purple-700">--%</span>
+          </div>
+          <p id="metric-classes-sub" class="text-[11px] text-slate-500 mt-1">Phy, Chem, Math, Eng</p>
+          <div class="absolute -right-3 -bottom-3 text-purple-500/10 text-5xl">
+            <i class="ph-bold ph-buildings"></i>
+          </div>
+        </div>
+
+        <!-- School Score -->
+        <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-teal-600">School Prelims</div>
+          <div class="mt-1 flex items-baseline space-x-1">
+            <span id="metric-school-pct" class="text-2xl font-black text-teal-700">--%</span>
+          </div>
+          <p id="metric-school-sub" class="text-[11px] text-slate-500 mt-1">All subjects</p>
+          <div class="absolute -right-3 -bottom-3 text-teal-500/10 text-5xl">
+            <i class="ph-bold ph-bank"></i>
+          </div>
+        </div>
+
+        <!-- Next Upcoming -->
+        <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-amber-700">Next Due</div>
+          <div id="metric-next-exam" class="mt-1 text-sm font-bold text-amber-900 truncate">No exam due</div>
+          <p id="metric-next-countdown" class="text-[11px] font-semibold text-amber-600 mt-1">Enjoy your prep!</p>
+          <div class="absolute -right-2 -bottom-2 text-amber-500/15 text-5xl">
+            <i class="ph-bold ph-clock-countdown"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Floating Bar -->
+      <div class="flex items-center justify-between bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+            <i class="ph-bold ph-lightning"></i>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">Quick Log</div>
+            <div class="text-[10px] text-slate-500">Record a new prelim or pencil in a date</div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="openExamModal()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm shadow-brand-500/30 flex items-center space-x-1.5 transition">
+            <i class="ph-bold ph-plus"></i>
+            <span>Add Prelim</span>
+          </button>
+          <button onclick="openEventModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center space-x-1.5 transition">
+            <i class="ph-bold ph-calendar-plus"></i>
+            <span>Add Event</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Subject Performance Breakdown -->
+      <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+            <i class="ph-bold ph-chart-bar text-brand-600"></i>
+            <span>Subject-wise Mastery</span>
+          </h2>
+          <span class="text-[10px] text-slate-400 font-medium">Attended exams only</span>
+        </div>
+        <div id="subjectBreakdownList" class="space-y-3">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Upcoming 3 Highlights -->
+      <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+            <i class="ph-bold ph-bell-ringing text-amber-500"></i>
+            <span>Next on the Schedule</span>
+          </h2>
+          <button onclick="switchTab('exams')" class="text-xs text-brand-600 font-semibold hover:underline">View All</button>
+        </div>
+        <div id="upcomingShortlist" class="space-y-2">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 2: PRELIMS TRACKER -->
+    <section id="view-exams" class="space-y-4 hidden">
+      <!-- Filter and Add Header -->
+      <div class="glass-card p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <!-- Category Filter -->
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl">
+          <button onclick="filterExams('ALL')" id="filter-all" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-800 shadow-sm transition">
+            All Prelims
+          </button>
+          <button onclick="filterExams('CLASSES')" id="filter-classes" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+            Genesis Classes
+          </button>
+          <button onclick="filterExams('SCHOOL')" id="filter-school" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+            School
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <!-- Subject dropdown filter -->
+          <select id="examSubjectFilter" onchange="renderExams()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 font-medium text-slate-700 outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="ALL">All Subjects</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="English">English</option>
+            <option value="Biology">Biology (School)</option>
+            <option value="Hindi">Hindi / Second Lang</option>
+            <option value="HCG">HCG (Hist/Civ/Geo)</option>
+            <option value="Computer">Computer / Group 3</option>
+          </select>
+
+          <button onclick="openExamModal()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl flex items-center space-x-1.5 shadow-sm shadow-brand-500/30 transition flex-shrink-0">
+            <i class="ph-bold ph-plus"></i>
+            <span>New Exam</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Exam Cards List -->
+      <div id="examsListContainer" class="space-y-3">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- TAB 3: CALENDAR & EVENT SCHEDULER -->
+    <section id="view-scheduler" class="space-y-4 hidden">
+      <!-- Event Intro & Add button -->
+      <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold text-slate-800">School & Personal Events</h2>
+          <p class="text-xs text-slate-500">Sports Day, Annual Day, Practicals & Key Dates</p>
+        </div>
+        <button onclick="openEventModal()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl flex items-center space-x-1.5 shadow-sm transition">
+          <i class="ph-bold ph-calendar-plus"></i>
+          <span>Add Event</span>
+        </button>
+      </div>
+
+      <!-- Combined Timeline (Exams + Events) -->
+      <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+          <div class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+            <i class="ph-bold ph-calendar text-brand-600"></i>
+            <span>Combined Calendar Stream</span>
+          </div>
+          <span class="text-[11px] text-slate-400" id="totalScheduleItems">0 Items</span>
+        </div>
+
+        <div id="combinedScheduleList" class="space-y-3">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: WHATSAPP REMINDERS -->
+    <section id="view-reminders" class="space-y-4 hidden">
+      <!-- WhatsApp Information Box -->
+      <div class="glass-card p-4 rounded-2xl shadow-sm border border-emerald-200/80 bg-gradient-to-br from-emerald-50/60 to-teal-50/40">
+        <div class="flex items-start space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-500/20">
+            <i class="ph-bold ph-whatsapp-logo text-2xl"></i>
+          </div>
+          <div class="flex-1">
+            <h2 class="text-sm font-bold text-slate-900">WhatsApp Reminder Assistant</h2>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+              Generate 1-click WhatsApp alerts for Anvi or parents! Tap <strong>"Send WhatsApp Ping"</strong> to open a pre-formatted reminder with dates and targets.
+            </p>
+            <div class="mt-2.5 flex flex-wrap gap-2 text-[11px]">
+              <span class="inline-flex items-center space-x-1 bg-white/90 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-200 font-medium">
+                <i class="ph ph-check-circle text-emerald-600"></i>
+                <span>2-Day Ahead Notice</span>
+              </span>
+              <span class="inline-flex items-center space-x-1 bg-white/90 text-blue-800 px-2 py-0.5 rounded-md border border-blue-200 font-medium">
+                <i class="ph ph-bell text-blue-600"></i>
+                <span>Google/Apple Calendar .ICS Sync</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Notification Settings -->
+      <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+        <div class="text-xs font-bold text-slate-800 uppercase tracking-wide">Target Recipient Number (Optional)</div>
+        <div class="flex items-center space-x-2">
+          <div class="flex items-center border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 flex-1 focus-within:ring-2 focus-within:ring-brand-500">
+            <span class="text-xs font-semibold text-slate-500 mr-2">+91</span>
+            <input type="tel" id="whatsappDefaultPhone" placeholder="Enter mobile number or leave blank to choose in WhatsApp" class="bg-transparent text-xs text-slate-800 w-full outline-none font-medium" />
+          </div>
+          <button onclick="savePhonePreference()" class="px-3.5 py-2 bg-slate-800 hover:bg-black text-white text-xs font-semibold rounded-xl transition">
+            Save
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-500">Leaving it blank allows you to easily forward to any WhatsApp family group or contact.</p>
+      </div>
+
+      <!-- Upcoming Alerts List -->
+      <div class="glass-card p-4 rounded-2xl shadow-sm border border-slate-200">
+        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Upcoming Items Ready for Reminders</h3>
+        <div id="whatsappUpcomingList" class="space-y-3">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ADD / EDIT EXAM -->
+  <div id="examModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center">
+            <i class="ph-bold ph-pencil-simple text-base"></i>
+          </div>
+          <h3 id="examModalTitle" class="text-sm font-bold text-slate-800">Add Prelim Exam</h3>
+        </div>
+        <button onclick="closeExamModal()" class="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
+          <i class="ph-bold ph-x text-sm"></i>
+        </button>
+      </div>
+
+      <form id="examForm" onsubmit="handleSaveExam(event)" class="p-5 space-y-3 text-xs">
+        <input type="hidden" id="examId" />
+
+        <!-- Category: Classes vs School -->
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Level / Category</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center justify-center p-2.5 rounded-xl border border-slate-200 cursor-pointer has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/60 transition">
+              <input type="radio" name="examCategory" value="CLASSES" checked onchange="updateSubjectOptions()" class="sr-only" />
+              <div class="flex items-center space-x-1.5 font-bold text-slate-700">
+                <i class="ph-bold ph-buildings text-brand-600 text-sm"></i>
+                <span>Genesis Classes</span>
+              </div>
+            </label>
+            <label class="flex items-center justify-center p-2.5 rounded-xl border border-slate-200 cursor-pointer has-[:checked]:border-teal-600 has-[:checked]:bg-teal-50/60 transition">
+              <input type="radio" name="examCategory" value="SCHOOL" onchange="updateSubjectOptions()" class="sr-only" />
+              <div class="flex items-center space-x-1.5 font-bold text-slate-700">
+                <i class="ph-bold ph-bank text-teal-600 text-sm"></i>
+                <span>School Prelim</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Subject Selection -->
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Subject</label>
+          <select id="examSubject" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-medium text-slate-800 outline-none focus:ring-2 focus:ring-brand-500">
+            <!-- Dynamically populated based on category -->
+          </select>
+          <p id="examSubjectNote" class="text-[10px] text-slate-400 mt-1">Genesis covers Physics, Chemistry, Maths, English.</p>
+        </div>
+
+        <!-- Exam Name / Identifier -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Exam Type</label>
+            <select id="examNamePreset" onchange="onPresetChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-medium text-slate-800 outline-none focus:ring-2 focus:ring-brand-500">
+              <option value="Prelim 1">Prelim 1</option>
+              <option value="Prelim 2">Prelim 2</option>
+              <option value="Prelim 3">Prelim 3</option>
+              <option value="Unit Test">Unit Test</option>
+              <option value="Final Mock">Final Mock</option>
+              <option value="CUSTOM">Custom Title...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Custom Title</label>
+            <input type="text" id="examCustomName" placeholder="e.g. Revision Exam" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-medium text-slate-800 outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50" disabled />
+          </div>
+        </div>
+
+        <!-- Date Picker (Allows rescheduling anytime) -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-semibold text-slate-700">Exam Date</label>
+            <span class="text-[10px] text-brand-600 font-medium">Can be rescheduled anytime</span>
+          </div>
+          <input type="date" id="examDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-medium text-slate-800 outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+
+        <!-- Attendance & Marks Section -->
+        <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Has she attended this exam?</label>
+            <select id="examAttended" onchange="toggleMarksFields(this.value)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 font-medium text-slate-800 outline-none focus:ring-2 focus:ring-brand-500">
+              <option value="NO_YET">⏳ Upcoming / Not Yet Attended</option>
+              <option value="YES">✅ Yes (Attended - Enter Marks)</option>
+              <option value="MISSED">❌ Missed / Absent</option>
+            </select>
+          </div>
+
+          <!-- Marks row (active when Attended = YES) -->
+          <div id="marksInputContainer" class="hidden grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Marks Obtained</label>
+              <input type="number" id="examMarksScored" min="0" step="0.5" placeholder="e.g. 72" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 font-bold text-brand-700 outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Out of (Max Marks)</label>
+              <input type="number" id="examMarksMax" min="1" step="1" value="80" placeholder="e.g. 80 or 100" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-800 outline-none focus:ring-2 focus:ring-brand-500" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Syllabus / Focus Chapters -->
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Focus Topics / Chapters (Optional)</label>
+          <input type="text" id="examNotes" placeholder="e.g. Organic Chem & Mole Concept, Linear Equations" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-normal text-slate-800 outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+
+        <!-- Buttons -->
+        <div class="pt-2 flex items-center justify-end space-x-2">
+          <button type="button" onclick="closeExamModal()" class="px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold shadow-md shadow-brand-500/20 transition">Save Prelim</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT GENERIC EVENT -->
+  <div id="eventModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+            <i class="ph-bold ph-calendar-star text-base"></i>
+          </div>
+          <h3 id="eventModalTitle" class="text-sm font-bold text-slate-800">Add School / Personal Event</h3>
+        </div>
+        <button onclick="closeEventModal()" class="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
+          <i class="ph-bold ph-x text-sm"></i>
+        </button>
+      </div>
+
+      <form id="eventForm" onsubmit="handleSaveEvent(event)" class="p-5 space-y-3 text-xs">
+        <input type="hidden" id="eventId" />
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Event Name</label>
+          <input type="text" id="eventName" required placeholder="e.g. Sports Day, Annual Function, Physics Practical" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Event Type</label>
+            <select id="eventType" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-medium text-slate-800 outline-none focus:ring-2 focus:ring-brand-500">
+              <option value="School Event">School Event</option>
+              <option value="Sports Day">Sports Day 🏆</option>
+              <option value="Annual Day">Annual Day 🎭</option>
+              <option value="Practical Exam">Practical / Lab Exam 🧪</option>
+              <option value="Project Submission">Project / Internal Work 📑</option>
+              <option value="Holiday / Break">Holiday / Study Break 🏖️</option>
+              <option value="Personal">Personal Milestone ⭐</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Date</label>
+            <input type="date" id="eventDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-medium text-slate-800 outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Notes / Instructions</label>
+          <textarea id="eventNotes" rows="2" placeholder="e.g. Wear white sports uniform, submit project file with biblio" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end space-x-2">
+          <button type="button" onclick="closeEventModal()" class="px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-md shadow-amber-500/20 transition">Save Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: BACKUP & EXPORT/IMPORT -->
+  <div id="backupModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-100 p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+          <i class="ph-bold ph-database text-brand-600"></i>
+          <span>Data Storage & Backup</span>
+        </h3>
+        <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-700">
+          <i class="ph-bold ph-x text-base"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        All of Anvi's records are stored safely in this browser. You can export a backup file to keep on Google Drive or transfer to her mobile phone.
+      </p>
+
+      <div class="space-y-2 pt-1">
+        <button onclick="exportDataJson()" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition">
+          <i class="ph ph-download-simple text-sm"></i>
+          <span>Export Backup (JSON)</span>
+        </button>
+
+        <label class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 cursor-pointer transition">
+          <i class="ph ph-upload-simple text-sm"></i>
+          <span>Import Backup File</span>
+          <input type="file" accept=".json" onchange="importDataJson(event)" class="sr-only" />
+        </label>
+
+        <button onclick="resetToSampleData()" class="w-full py-2.5 px-4 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition">
+          <i class="ph ph-arrow-counter-clockwise text-sm"></i>
+          <span>Reset to Starter Sample Data</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toastMessage" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-2xl shadow-xl flex items-center space-x-2 transition-all duration-300 opacity-0 pointer-events-none z-50">
+    <i id="toastIcon" class="ph-bold ph-check text-emerald-400"></i>
+    <span id="toastText">Action completed</span>
+  </div>
+
+  <footer class="mt-auto py-4 text-center text-[11px] text-slate-400">
+    Built for Anvi's Class 10 ICSE Journey (2026-2027) • Thane
+  </footer>
+
+  <!-- Core Script Logic -->
+  <script>
+    // LocalStorage Keys
+    const STORAGE_KEY_EXAMS = 'anvi_icse_exams_v1';
+    const STORAGE_KEY_EVENTS = 'anvi_icse_events_v1';
+    const STORAGE_KEY_PHONE = 'anvi_icse_wa_phone_v1';
+
+    // Subject Presets
+    const CLASSES_SUBJECTS = ['Physics', 'Chemistry', 'Mathematics', 'English'];
+    const SCHOOL_SUBJECTS = [
+      'Physics',
+      'Chemistry',
+      'Mathematics',
+      'English',
+      'Biology',
+      'Hindi / Second Lang',
+      'History & Civics',
+      'Geography',
+      'Computer Applications / Commercial'
+    ];
+
+    // Starter Seed Data for immediate testing
+    const SAMPLE_EXAMS = [
+      {
+        id: 'ex-1',
+        category: 'CLASSES', // 'CLASSES' or 'SCHOOL'
+        subject: 'Physics',
+        name: 'Prelim 1',
+        date: '2026-11-04',
+        attended: 'YES', // 'YES', 'NO_YET', 'MISSED'
+        marksScored: 71,
+        marksMax: 80,
+        notes: 'Force, Work, Power & Sound chapters'
+      },
+      {
+        id: 'ex-2',
+        category: 'CLASSES',
+        subject: 'Chemistry',
+        name: 'Prelim 1',
+        date: '2026-11-08',
+        attended: 'YES',
+        marksScored: 74,
+        marksMax: 80,
+        notes: 'Periodic Table & Chemical Bonding'
+      },
+      {
+        id: 'ex-3',
+        category: 'CLASSES',
+        subject: 'Mathematics',
+        name: 'Prelim 1',
+        date: '2026-11-14',
+        attended: 'NO_YET',
+        marksScored: null,
+        marksMax: 80,
+        notes: 'GST, Banking & Quadratic equations'
+      },
+      {
+        id: 'ex-4',
+        category: 'CLASSES',
+        subject: 'English',
+        name: 'Prelim 1',
+        date: '2026-11-18',
+        attended: 'NO_YET',
+        marksScored: null,
+        marksMax: 80,
+        notes: 'Language Composition + Merchant of Venice'
+      },
+      {
+        id: 'ex-5',
+        category: 'SCHOOL',
+        subject: 'Biology',
+        name: 'Prelim 1',
+        date: '2026-11-25',
+        attended: 'NO_YET',
+        marksScored: null,
+        marksMax: 80,
+        notes: 'Genetics and Plant Physiology'
+      }
+    ];
+
+    const SAMPLE_EVENTS = [
+      {
+        id: 'ev-1',
+        name: 'School Annual Sports Day',
+        type: 'Sports Day',
+        date: '2026-12-05',
+        notes: 'March past rehearsal on 3rd Dec'
+      },
+      {
+        id: 'ev-2',
+        name: 'Physics & Chem Lab Practicals',
+        type: 'Practical Exam',
+        date: '2026-12-18',
+        notes: 'Check journals signed by teacher'
+      }
+    ];
+
+    const MOTIVATIONAL_QUOTES = [
+      "\"Success is the sum of small efforts, repeated day in and day out.\" - Robert Collier",
+      "\"Consistency is the secret code to cracking ICSE 10th with flying colors!\"",
+      "\"Believe in your preparation Anvi! You are capable of amazing things.\"",
+      "\"Every prelim is just practice for the final victory in Feb 2027!\""
+    ];
+
+    // State Variables
+    let exams = [];
+    let events = [];
+    let activeCategoryFilter = 'ALL'; // 'ALL', 'CLASSES', 'SCHOOL'
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      renderRandomQuote();
+      updateSubjectOptions();
+      renderDashboard();
+      renderExams();
+      renderEvents();
+      renderReminders();
+
+      // Load saved WhatsApp phone if present
+      const savedPhone = localStorage.getItem(STORAGE_KEY_PHONE);
+      if (savedPhone) {
+        document.getElementById('whatsappDefaultPhone').value = savedPhone;
+      }
+    });
+
+    function loadData() {
+      const storedExams = localStorage.getItem(STORAGE_KEY_EXAMS);
+      const storedEvents = localStorage.getItem(STORAGE_KEY_EVENTS);
+
+      exams = storedExams ? JSON.parse(storedExams) : [...SAMPLE_EXAMS];
+      events = storedEvents ? JSON.parse(storedEvents) : [...SAMPLE_EVENTS];
+
+      if (!storedExams) saveData();
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(exams));
+      localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(events));
+    }
+
+    function renderRandomQuote() {
+      const q = MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)];
+      document.getElementById('quoteText').textContent = q;
+    }
+
+    // Navigation Switching
+    function switchTab(tabName) {
+      const views = ['dashboard', 'exams', 'scheduler', 'reminders'];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        const btn = document.getElementById(`tabBtn-${v}`);
+        if (v === tabName) {
+          el.classList.remove('hidden');
+          btn.classList.add('bg-white', 'text-brand-700', 'shadow-sm');
+          btn.classList.remove('text-slate-600');
+        } else {
+          el.classList.add('hidden');
+          btn.classList.remove('bg-white', 'text-brand-700', 'shadow-sm');
+          btn.classList.add('text-slate-600');
+        }
+      });
+
+      if (tabName === 'dashboard') renderDashboard();
+      if (tabName === 'exams') renderExams();
+      if (tabName === 'scheduler') renderEvents();
+      if (tabName === 'reminders') renderReminders();
+    }
+
+    // Category filter for Exams view
+    function filterExams(category) {
+      activeCategoryFilter = category;
+      const filters = ['all', 'classes', 'school'];
+      filters.forEach(f => {
+        const btn = document.getElementById(`filter-${f}`);
+        if (f === category.toLowerCase()) {
+          btn.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+          btn.classList.remove('text-slate-600');
+        } else {
+          btn.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+          btn.classList.add('text-slate-600');
+        }
+      });
+      renderExams();
+    }
+
+    // DASHBOARD RENDERING
+    function renderDashboard() {
+      // 1. Calculate overall score %
+      const attendedExams = exams.filter(e => e.attended === 'YES' && e.marksScored !== null && e.marksMax > 0);
+      const classesAttended = attendedExams.filter(e => e.category === 'CLASSES');
+      const schoolAttended = attendedExams.filter(e => e.category === 'SCHOOL');
+
+      const calcPct = (list) => {
+        if (!list.length) return null;
+        const totalScored = list.reduce((acc, curr) => acc + Number(curr.marksScored || 0), 0);
+        const totalMax = list.reduce((acc, curr) => acc + Number(curr.marksMax || 0), 0);
+        return totalMax > 0 ? ((totalScored / totalMax) * 100).toFixed(1) : null;
+      };
+
+      const overallPct = calcPct(attendedExams);
+      const classesPct = calcPct(classesAttended);
+      const schoolPct = calcPct(schoolAttended);
+
+      document.getElementById('metric-overall-pct').textContent = overallPct !== null ? `${overallPct}%` : '--%';
+      document.getElementById('metric-overall-sub').textContent = `Across ${attendedExams.length} attended prelim${attendedExams.length === 1 ? '' : 's'}`;
+
+      document.getElementById('metric-classes-pct').textContent = classesPct !== null ? `${classesPct}%` : '--%';
+      document.getElementById('metric-classes-sub').textContent = `${classesAttended.length} exams entered`;
+
+      document.getElementById('metric-school-pct').textContent = schoolPct !== null ? `${schoolPct}%` : '--%';
+      document.getElementById('metric-school-sub').textContent = `${schoolAttended.length} exams entered`;
+
+      // 2. Next Upcoming Exam / Event
+      const now = new Date();
+      now.setHours(0,0,0,0);
+
+      const allFuture = [];
+      exams.forEach(ex => {
+        if (ex.attended !== 'YES' && ex.date) {
+          const d = new Date(ex.date);
+          allFuture.push({
+            title: `${ex.subject} (${ex.name})`,
+            category: ex.category === 'CLASSES' ? 'Genesis' : 'School',
+            date: d,
+            isExam: true,
+            raw: ex
+          });
+        }
+      });
+
+      events.forEach(ev => {
+        if (ev.date) {
+          const d = new Date(ev.date);
+          allFuture.push({
+            title: ev.name,
+            category: ev.type,
+            date: d,
+            isExam: false,
+            raw: ev
+          });
+        }
+      });
+
+      // Filter upcoming or today
+      const upcoming = allFuture.filter(item => item.date >= now).sort((a,b) => a.date - b.date);
+
+      if (upcoming.length > 0) {
+        const next = upcoming[0];
+        const daysDiff = Math.ceil((next.date - now) / (1000 * 60 * 60 * 24));
+        document.getElementById('metric-next-exam').textContent = next.title;
+        document.getElementById('metric-next-countdown').textContent = daysDiff === 0 ? 'Today! Good luck!' : `In ${daysDiff} day${daysDiff === 1 ? '' : 's'} (${formatDate(next.date)})`;
+      } else {
+        document.getElementById('metric-next-exam').textContent = 'All Caught Up';
+        document.getElementById('metric-next-countdown').textContent = 'No upcoming tests scheduled';
+      }
+
+      // 3. Subject-wise breakdown list
+      renderSubjectBreakdown(attendedExams);
+
+      // 4. Upcoming list in dashboard
+      renderDashboardShortlist(upcoming);
+    }
+
+    function renderSubjectBreakdown(attendedExams) {
+      const container = document.getElementById('subjectBreakdownList');
+      container.innerHTML = '';
+
+      if (attendedExams.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-slate-400 text-xs">
+            <i class="ph ph-chart-line text-2xl mb-1 text-slate-300"></i>
+            <p>No exams marked as "Attended" yet.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">As Anvi takes her prelims, enter her scores to unlock subject progress bars!</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Group by subject
+      const subjectMap = {};
+      attendedExams.forEach(item => {
+        const sub = item.subject;
+        if (!subjectMap[sub]) {
+          subjectMap[sub] = { scored: 0, max: 0, count: 0 };
+        }
+        subjectMap[sub].scored += Number(item.marksScored || 0);
+        subjectMap[sub].max += Number(item.marksMax || 0);
+        subjectMap[sub].count += 1;
+      });
+
+      Object.entries(subjectMap).forEach(([subject, stats]) => {
+        const pct = stats.max > 0 ? Math.round((stats.scored / stats.max) * 100) : 0;
+        
+        let colorClass = 'from-brand-500 to-indigo-600';
+        let badgeColor = 'text-brand-700 bg-brand-50 border-brand-200';
+        if (pct >= 90) {
+          colorClass = 'from-emerald-500 to-teal-500';
+          badgeColor = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+        } else if (pct < 70) {
+          colorClass = 'from-amber-500 to-orange-500';
+          badgeColor = 'text-amber-700 bg-amber-50 border-amber-200';
+        }
+
+        const row = document.createElement('div');
+        row.className = 'space-y-1';
+        row.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700">${subject}</span>
+            <div class="flex items-center space-x-2">
+              <span class="text-[11px] text-slate-400">${stats.scored}/${stats.max} marks (${stats.count} test${stats.count > 1 ? 's' : ''})</span>
+              <span class="font-black text-xs px-2 py-0.5 rounded-md border ${badgeColor}">${pct}%</span>
+            </div>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+            <div class="h-full rounded-full bg-gradient-to-r ${colorClass} transition-all duration-500" style="width: ${Math.min(pct, 100)}%"></div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function renderDashboardShortlist(upcomingItems) {
+      const container = document.getElementById('upcomingShortlist');
+      container.innerHTML = '';
+
+      if (!upcomingItems || upcomingItems.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-4 text-xs text-slate-400">
+            No upcoming exams or events penciled in yet.
+          </div>
+        `;
+        return;
+      }
+
+      upcomingItems.slice(0, 3).forEach(item => {
+        const now = new Date();
+        now.setHours(0,0,0,0);
+        const days = Math.ceil((item.date - now) / (1000 * 60 * 60 * 24));
+        const daysLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `In ${days} days`;
+
+        const div = document.createElement('div');
+        div.className = 'p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs';
+        div.innerHTML = `
+          <div class="flex items-center space-x-2.5 overflow-hidden">
+            <div class="w-7 h-7 rounded-lg ${item.isExam ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700'} flex items-center justify-center flex-shrink-0">
+              <i class="ph-bold ${item.isExam ? 'ph-pencil-line' : 'ph-calendar-star'}"></i>
+            </div>
+            <div class="truncate">
+              <div class="font-semibold text-slate-800 truncate">${item.title}</div>
+              <div class="text-[10px] text-slate-400">${item.category} • ${formatDate(item.date)}</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 flex-shrink-0 ml-2">
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${days <= 2 ? 'bg-rose-100 text-rose-700' : 'bg-slate-200/80 text-slate-700'}">
+              ${daysLabel}
+            </span>
+            <button onclick="shareViaWhatsApp('${escapeJs(item.title)}', '${formatDate(item.date)}', '${escapeJs(item.raw.notes || '')}', '${escapeJs(item.category)}')" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="WhatsApp Alert">
+              <i class="ph-bold ph-whatsapp-logo text-base"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // PRELIMS VIEW RENDERING
+    function renderExams() {
+      const container = document.getElementById('examsListContainer');
+      container.innerHTML = '';
+
+      const subjectFilter = document.getElementById('examSubjectFilter').value;
+
+      // Filter exams
+      let filtered = exams.filter(e => {
+        if (activeCategoryFilter !== 'ALL' && e.category !== activeCategoryFilter) return false;
+        if (subjectFilter !== 'ALL' && !e.subject.includes(subjectFilter)) return false;
+        return true;
+      });
+
+      // Sort by date ascending (soonest first)
+      filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card text-center py-10 px-4 rounded-3xl border border-dashed border-slate-200">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-purple-50 text-brand-600 flex items-center justify-center text-2xl mb-2">
+              <i class="ph ph-notebook"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-700">No exams found</h3>
+            <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">No prelim exams recorded for the selected filter. Click "New Exam" above to add one!</p>
+            <button onclick="openExamModal()" class="mt-3 px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold">
+              Add First Exam
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const d = new Date(item.date);
+        const now = new Date();
+        now.setHours(0,0,0,0);
+        const daysDiff = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+
+        let statusBadge = '';
+        let scoreDisplay = '';
+
+        if (item.attended === 'YES') {
+          const pct = item.marksMax > 0 ? ((item.marksScored / item.marksMax) * 100).toFixed(0) : 0;
+          statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">✅ Attended</span>`;
+          scoreDisplay = `
+            <div class="text-right">
+              <div class="text-base font-black text-slate-800">${item.marksScored} <span class="text-xs text-slate-400 font-semibold">/ ${item.marksMax}</span></div>
+              <div class="text-[10px] font-bold text-brand-600">${pct}% Scored</div>
+            </div>
+          `;
+        } else if (item.attended === 'MISSED') {
+          statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">❌ Missed</span>`;
+          scoreDisplay = `<span class="text-xs text-rose-500 font-medium">Absent</span>`;
+        } else {
+          // Upcoming
+          const daysText = daysDiff === 0 ? 'Today!' : daysDiff > 0 ? `${daysDiff} days left` : `${Math.abs(daysDiff)} days ago`;
+          const badgeClass = daysDiff <= 2 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600';
+          statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeClass}">⏳ ${daysText}</span>`;
+          scoreDisplay = `
+            <button onclick="promptQuickScore('${item.id}')" class="px-2.5 py-1 text-[11px] font-semibold text-brand-700 bg-brand-50 border border-brand-200 rounded-lg hover:bg-brand-100 transition">
+              + Enter Marks
+            </button>
+          `;
+        }
+
+        const categoryTag = item.category === 'CLASSES' 
+          ? `<span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-md text-[10px]">Genesis Classes</span>`
+          : `<span class="bg-teal-100 text-teal-700 font-bold px-2 py-0.5 rounded-md text-[10px]">School Prelim</span>`;
+
+        const card = document.createElement('div');
+        card.className = 'glass-card p-4 rounded-2xl shadow-sm border border-slate-200 transition hover:shadow-md';
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2">
+                ${categoryTag}
+                ${statusBadge}
+              </div>
+              <h3 class="text-sm font-bold text-slate-900">${item.subject} <span class="font-semibold text-slate-600">- ${item.name}</span></h3>
+              <div class="flex items-center space-x-1.5 text-xs text-slate-500">
+                <i class="ph ph-calendar-blank text-brand-600"></i>
+                <span class="font-medium">${formatDate(d)}</span>
+                <button onclick="editExam('${item.id}')" class="text-[10px] text-brand-600 font-semibold hover:underline ml-1">
+                  (Change date)
+                </button>
+              </div>
+            </div>
+
+            <!-- Score / Action -->
+            <div class="flex-shrink-0">
+              ${scoreDisplay}
+            </div>
+          </div>
+
+          ${item.notes ? `
+            <div class="mt-2.5 pt-2 border-t border-slate-100 text-[11px] text-slate-600 flex items-start space-x-1.5">
+              <i class="ph ph-notebook text-slate-400 mt-0.5 flex-shrink-0"></i>
+              <span class="truncate-2-lines">${item.notes}</span>
+            </div>
+          ` : ''}
+
+          <!-- Footer Actions -->
+          <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <button onclick="shareViaWhatsApp('${escapeJs(item.subject + ' - ' + item.name)}', '${formatDate(d)}', '${escapeJs(item.notes || '')}', '${item.category === 'CLASSES' ? 'Genesis Classes' : 'School'}')" class="inline-flex items-center space-x-1 text-[11px] text-emerald-700 hover:text-emerald-800 font-semibold bg-emerald-50 px-2.5 py-1 rounded-lg transition">
+                <i class="ph-bold ph-whatsapp-logo text-xs"></i>
+                <span>WhatsApp Ping</span>
+              </button>
+              <button onclick="downloadIcsFile('${escapeJs(item.subject + ' Prelim (' + item.name + ')')}', '${item.date}', '${escapeJs(item.notes || '')}')" class="inline-flex items-center space-x-1 text-[11px] text-blue-700 hover:text-blue-800 font-semibold bg-blue-50 px-2.5 py-1 rounded-lg transition" title="Add reminder to phone calendar">
+                <i class="ph ph-calendar-plus text-xs"></i>
+                <span>Calendar Alert</span>
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-1">
+              <button onclick="editExam('${item.id}')" class="p-1.5 text-slate-400 hover:text-brand-600 rounded-lg hover:bg-slate-100 transition" title="Edit">
+                <i class="ph ph-note-pencil text-sm"></i>
+              </button>
+              <button onclick="deleteExam('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition" title="Delete">
+                <i class="ph ph-trash text-sm"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // CALENDAR & SCHEDULER VIEW
+    function renderEvents() {
+      const container = document.getElementById('combinedScheduleList');
+      container.innerHTML = '';
+
+      // Combine exams + generic events for a unified timeline
+      const timeline = [];
+
+      exams.forEach(ex => {
+        timeline.push({
+          id: ex.id,
+          type: 'EXAM',
+          title: `${ex.subject} (${ex.name})`,
+          badge: ex.category === 'CLASSES' ? 'Genesis Prelim' : 'School Prelim',
+          badgeStyle: ex.category === 'CLASSES' ? 'bg-purple-100 text-purple-700' : 'bg-teal-100 text-teal-700',
+          date: ex.date,
+          notes: ex.notes,
+          attended: ex.attended,
+          raw: ex
+        });
+      });
+
+      events.forEach(ev => {
+        timeline.push({
+          id: ev.id,
+          type: 'EVENT',
+          title: ev.name,
+          badge: ev.type,
+          badgeStyle: 'bg-amber-100 text-amber-800',
+          date: ev.date,
+          notes: ev.notes,
+          attended: null,
+          raw: ev
+        });
+      });
+
+      // Sort chronology
+      timeline.sort((a,b) => new Date(a.date) - new Date(b.date));
+      document.getElementById('totalScheduleItems').textContent = `${timeline.length} scheduled`;
+
+      if (timeline.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-xs text-slate-400">
+            No events or exams on schedule. Tap "+ Add Event" above to add Sports Day, Annual Day or Practicals!
+          </div>
+        `;
+        return;
+      }
+
+      const now = new Date();
+      now.setHours(0,0,0,0);
+
+      timeline.forEach(item => {
+        const itemDate = new Date(item.date);
+        const days = Math.ceil((itemDate - now) / (1000 * 60 * 60 * 24));
+        const isPast = days < 0;
+
+        let timeBadge = '';
+        if (days === 0) timeBadge = '<span class="text-[10px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-md">TODAY</span>';
+        else if (days === 1) timeBadge = '<span class="text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-md">TOMORROW</span>';
+        else if (days > 1) timeBadge = `<span class="text-[10px] font-semibold text-slate-500">${days} days away</span>`;
+        else timeBadge = `<span class="text-[10px] text-slate-400">Past</span>`;
+
+        const row = document.createElement('div');
+        row.className = `p-3 rounded-2xl border transition ${isPast ? 'bg-slate-50/60 border-slate-200/60 opacity-75' : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'}`;
+        row.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div class="flex items-start space-x-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.type === 'EXAM' ? 'bg-purple-100 text-brand-700' : 'bg-amber-100 text-amber-700'}">
+                <i class="ph-bold ${item.type === 'EXAM' ? 'ph-books' : 'ph-confetti'} text-lg"></i>
+              </div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${item.badgeStyle}">${item.badge}</span>
+                  ${timeBadge}
+                </div>
+                <h4 class="text-xs font-bold text-slate-800 mt-1">${item.title}</h4>
+                <div class="text-[11px] text-slate-500 flex items-center space-x-1 mt-0.5">
+                  <i class="ph ph-calendar"></i>
+                  <span>${formatDate(itemDate)}</span>
+                  ${item.notes ? `<span class="text-slate-400">• ${item.notes}</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center space-x-1 flex-shrink-0">
+              <button onclick="shareViaWhatsApp('${escapeJs(item.title)}', '${formatDate(itemDate)}', '${escapeJs(item.notes || '')}', '${escapeJs(item.badge)}')" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Send WhatsApp alert">
+                <i class="ph-bold ph-whatsapp-logo text-base"></i>
+              </button>
+              ${item.type === 'EVENT' ? `
+                <button onclick="editEvent('${item.id}')" class="p-1.5 text-slate-400 hover:text-amber-600 rounded-lg transition" title="Edit">
+                  <i class="ph ph-note-pencil text-sm"></i>
+                </button>
+                <button onclick="deleteEvent('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition" title="Delete">
+                  <i class="ph ph-trash text-sm"></i>
+                </button>
+              ` : `
+                <button onclick="editExam('${item.id}')" class="p-1.5 text-slate-400 hover:text-brand-600 rounded-lg transition" title="Edit Exam">
+                  <i class="ph ph-note-pencil text-sm"></i>
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // WHATSAPP REMINDER TAB RENDERING
+    function renderReminders() {
+      const container = document.getElementById('whatsappUpcomingList');
+      container.innerHTML = '';
+
+      const now = new Date();
+      now.setHours(0,0,0,0);
+
+      // Collect all future exams + events
+      const list = [];
+      exams.forEach(ex => {
+        if (ex.attended !== 'YES' && ex.date) {
+          list.push({
+            name: `${ex.subject} (${ex.name})`,
+            type: ex.category === 'CLASSES' ? 'Genesis Classes' : 'School Prelim',
+            date: new Date(ex.date),
+            notes: ex.notes,
+            isExam: true
+          });
+        }
+      });
+
+      events.forEach(ev => {
+        if (ev.date) {
+          list.push({
+            name: ev.name,
+            type: ev.type,
+            date: new Date(ev.date),
+            notes: ev.notes,
+            isExam: false
+          });
+        }
+      });
+
+      const upcoming = list.filter(i => i.date >= now).sort((a,b) => a.date - b.date);
+
+      if (upcoming.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-xs text-slate-400">
+            No upcoming events or tests right now. Everything is completed!
+          </div>
+        `;
+        return;
+      }
+
+      upcoming.forEach(item => {
+        const days = Math.ceil((item.date - now) / (1000 * 60 * 60 * 24));
+        const daysBadge = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `In ${days} days`;
+
+        const row = document.createElement('div');
+        row.className = 'p-3 bg-white border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+        row.innerHTML = `
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${item.isExam ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-800'}">${item.type}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${days <= 2 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}">${daysBadge}</span>
+            </div>
+            <h4 class="text-xs font-bold text-slate-800">${item.name}</h4>
+            <div class="text-[11px] text-slate-500">Scheduled Date: ${formatDate(item.date)}</div>
+            ${item.notes ? `<div class="text-[10px] text-slate-400 italic">Topics: ${item.notes}</div>` : ''}
+          </div>
+
+          <div class="flex items-center space-x-2 flex-shrink-0">
+            <button onclick="shareViaWhatsApp('${escapeJs(item.name)}', '${formatDate(item.date)}', '${escapeJs(item.notes || '')}', '${escapeJs(item.type)}')" class="flex-1 sm:flex-none px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 shadow-sm shadow-emerald-600/30 transition">
+              <i class="ph-bold ph-whatsapp-logo text-base"></i>
+              <span>Send 2-Day Ping</span>
+            </button>
+            <button onclick="downloadIcsFile('${escapeJs(item.name)}', '${item.date.toISOString().split('T')[0]}', '${escapeJs(item.notes || '')}')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center space-x-1 transition" title="Add calendar alarm 2 days ahead">
+              <i class="ph ph-bell"></i>
+              <span>Cal Push</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // WHATSAPP TRIGGER FUNCTION
+    function shareViaWhatsApp(title, formattedDate, notes, category) {
+      const savedPhone = localStorage.getItem(STORAGE_KEY_PHONE) || '';
+      const cleanPhone = savedPhone.replace(/\D/g, '');
+
+      let message = `🎯 *ICSE 10th Prelim Alert for Anvi*\n\n`;
+      message += `📌 *${title}* (${category})\n`;
+      message += `🗓 *Date:* ${formattedDate}\n`;
+      if (notes) {
+        message += `📖 *Focus / Chapters:* ${notes}\n`;
+      }
+      message += `\n⏰ *Reminder:* Please revise high-weightage topics and keep stationery ready!\nAll the best Anvi! ✨`;
+
+      const encoded = encodeURIComponent(message);
+      let waUrl = `https://wa.me/?text=${encoded}`;
+      if (cleanPhone) {
+        // If Indian number without country code, add 91
+        const target = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+        waUrl = `https://wa.me/${target}?text=${encoded}`;
+      }
+
+      window.open(waUrl, '_blank');
+      showToast('Opening WhatsApp reminder...');
+    }
+
+    // CALENDAR ICS EXPORT (Provides native mobile 2-day push notifications)
+    function downloadIcsFile(title, dateStr, notes) {
+      if (!dateStr) return;
+      const cleanDate = dateStr.replace(/-/g, '');
+      const icsData = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Anvi ICSE Prelim Tracker//EN',
+        'CALSCALE:GREGORIAN',
+        'BEGIN:VEVENT',
+        `SUMMARY:Anvi's Prelim: ${title}`,
+        `DESCRIPTION:${notes || 'Revise key concepts and solve previous year questions.'}`,
+        `DTSTART;VALUE=DATE:${cleanDate}`,
+        `DTEND;VALUE=DATE:${cleanDate}`,
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:Exam in 2 Days!',
+        'TRIGGER:-P2D', // 2 Days before native alarm!
+        'END:VALARM',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', `${title.replace(/\s+/g, '_')}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Calendar event downloaded (Alarm set 2 days prior)!');
+    }
+
+    // EXAM MODAL LOGIC
+    function openExamModal(editId = null) {
+      const modal = document.getElementById('examModal');
+      const form = document.getElementById('examForm');
+      form.reset();
+
+      if (editId) {
+        const item = exams.find(e => e.id === editId);
+        if (item) {
+          document.getElementById('examModalTitle').textContent = 'Edit Prelim Exam';
+          document.getElementById('examId').value = item.id;
+          
+          // Category
+          const radios = document.getElementsByName('examCategory');
+          radios.forEach(r => { if (r.value === item.category) r.checked = true; });
+          updateSubjectOptions(item.subject);
+
+          // Name
+          const presetSelect = document.getElementById('examNamePreset');
+          const customNameInput = document.getElementById('examCustomName');
+          if (['Prelim 1', 'Prelim 2', 'Prelim 3', 'Unit Test', 'Final Mock'].includes(item.name)) {
+            presetSelect.value = item.name;
+            customNameInput.disabled = true;
+            customNameInput.value = '';
+          } else {
+            presetSelect.value = 'CUSTOM';
+            customNameInput.disabled = false;
+            customNameInput.value = item.name;
+          }
+
+          document.getElementById('examDate').value = item.date;
+          document.getElementById('examAttended').value = item.attended;
+          toggleMarksFields(item.attended);
+
+          if (item.marksScored !== null) document.getElementById('examMarksScored').value = item.marksScored;
+          if (item.marksMax !== null) document.getElementById('examMarksMax').value = item.marksMax;
+          document.getElementById('examNotes').value = item.notes || '';
+        }
+      } else {
+        document.getElementById('examModalTitle').textContent = 'Add Prelim Exam';
+        document.getElementById('examId').value = '';
+        updateSubjectOptions();
+        toggleMarksFields('NO_YET');
+        // Default today's date
+        document.getElementById('examDate').value = new Date().toISOString().split('T')[0];
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeExamModal() {
+      const modal = document.getElementById('examModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function updateSubjectOptions(selectedSubject = null) {
+      const categoryRadios = document.getElementsByName('examCategory');
+      let currentCategory = 'CLASSES';
+      for (const r of categoryRadios) {
+        if (r.checked) currentCategory = r.value;
+      }
+
+      const select = document.getElementById('examSubject');
+      const note = document.getElementById('examSubjectNote');
+      select.innerHTML = '';
+
+      const list = currentCategory === 'CLASSES' ? CLASSES_SUBJECTS : SCHOOL_SUBJECTS;
+      note.textContent = currentCategory === 'CLASSES' 
+        ? "Genesis covers Physics, Chemistry, Mathematics, English."
+        : "School prelim includes all ICSE registered subjects.";
+
+      list.forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        opt.textContent = sub;
+        if (selectedSubject && selectedSubject === sub) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function onPresetChange(val) {
+      const customInput = document.getElementById('examCustomName');
+      if (val === 'CUSTOM') {
+        customInput.disabled = false;
+        customInput.focus();
+      } else {
+        customInput.disabled = true;
+        customInput.value = '';
+      }
+    }
+
+    function toggleMarksFields(attendedVal) {
+      const container = document.getElementById('marksInputContainer');
+      if (attendedVal === 'YES') {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    function handleSaveExam(e) {
+      e.preventDefault();
+      const id = document.getElementById('examId').value;
+      const category = document.querySelector('input[name="examCategory"]:checked').value;
+      const subject = document.getElementById('examSubject').value;
+      const preset = document.getElementById('examNamePreset').value;
+      const customName = document.getElementById('examCustomName').value.trim();
+      const name = preset === 'CUSTOM' ? (customName || 'Custom Exam') : preset;
+      const date = document.getElementById('examDate').value;
+      const attended = document.getElementById('examAttended').value;
+      const notes = document.getElementById('examNotes').value.trim();
+
+      let marksScored = null;
+      let marksMax = 80;
+
+      if (attended === 'YES') {
+        marksScored = parseFloat(document.getElementById('examMarksScored').value) || 0;
+        marksMax = parseFloat(document.getElementById('examMarksMax').value) || 80;
+
+        // Celebrate great score!
+        if (marksMax > 0 && (marksScored / marksMax) >= 0.85) {
+          fireConfetti();
+        }
+      }
+
+      if (id) {
+        // Edit existing
+        const idx = exams.findIndex(x => x.id === id);
+        if (idx !== -1) {
+          exams[idx] = { ...exams[idx], category, subject, name, date, attended, marksScored, marksMax, notes };
+        }
+        showToast('Prelim updated successfully!');
+      } else {
+        // Create new
+        const newExam = {
+          id: 'ex-' + Date.now(),
+          category,
+          subject,
+          name,
+          date,
+          attended,
+          marksScored,
+          marksMax,
+          notes
+        };
+        exams.push(newExam);
+        showToast('New prelim scheduled!');
+      }
+
+      saveData();
+      closeExamModal();
+      renderDashboard();
+      renderExams();
+      renderEvents();
+      renderReminders();
+    }
+
+    function editExam(id) {
+      openExamModal(id);
+    }
+
+    function deleteExam(id) {
+      if (confirmDialog("Delete Exam", "Are you sure you want to remove this prelim entry?")) {
+        exams = exams.filter(e => e.id !== id);
+        saveData();
+        renderDashboard();
+        renderExams();
+        renderEvents();
+        renderReminders();
+        showToast('Exam deleted.');
+      }
+    }
+
+    // Quick score shortcut directly from card
+    function promptQuickScore(examId) {
+      const item = exams.find(e => e.id === examId);
+      if (!item) return;
+      openExamModal(examId);
+      document.getElementById('examAttended').value = 'YES';
+      toggleMarksFields('YES');
+      document.getElementById('examMarksScored').focus();
+    }
+
+    // EVENT MODAL LOGIC
+    function openEventModal(editId = null) {
+      const modal = document.getElementById('eventModal');
+      const form = document.getElementById('eventForm');
+      form.reset();
+
+      if (editId) {
+        const ev = events.find(e => e.id === editId);
+        if (ev) {
+          document.getElementById('eventModalTitle').textContent = 'Edit Event';
+          document.getElementById('eventId').value = ev.id;
+          document.getElementById('eventName').value = ev.name;
+          document.getElementById('eventType').value = ev.type;
+          document.getElementById('eventDate').value = ev.date;
+          document.getElementById('eventNotes').value = ev.notes || '';
+        }
+      } else {
+        document.getElementById('eventModalTitle').textContent = 'Add School / Personal Event';
+        document.getElementById('eventId').value = '';
+        document.getElementById('eventDate').value = new Date().toISOString().split('T')[0];
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeEventModal() {
+      const modal = document.getElementById('eventModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleSaveEvent(e) {
+      e.preventDefault();
+      const id = document.getElementById('eventId').value;
+      const name = document.getElementById('eventName').value.trim();
+      const type = document.getElementById('eventType').value;
+      const date = document.getElementById('eventDate').value;
+      const notes = document.getElementById('eventNotes').value.trim();
+
+      if (id) {
+        const idx = events.findIndex(e => e.id === id);
+        if (idx !== -1) {
+          events[idx] = { ...events[idx], name, type, date, notes };
+        }
+        showToast('Event updated!');
+      } else {
+        const newEv = {
+          id: 'ev-' + Date.now(),
+          name,
+          type,
+          date,
+          notes
+        };
+        events.push(newEv);
+        showToast('New event added to calendar!');
+      }
+
+      saveData();
+      closeEventModal();
+      renderDashboard();
+      renderEvents();
+      renderReminders();
+    }
+
+    function editEvent(id) {
+      openEventModal(id);
+    }
+
+    function deleteEvent(id) {
+      if (confirmDialog("Delete Event", "Remove this event from the calendar?")) {
+        events = events.filter(e => e.id !== id);
+        saveData();
+        renderDashboard();
+        renderEvents();
+        renderReminders();
+        showToast('Event removed.');
+      }
+    }
+
+    // SETTINGS & BACKUP MODAL
+    function openBackupModal() {
+      const modal = document.getElementById('backupModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeBackupModal() {
+      const modal = document.getElementById('backupModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function savePhonePreference() {
+      const phone = document.getElementById('whatsappDefaultPhone').value.trim();
+      localStorage.setItem(STORAGE_KEY_PHONE, phone);
+      showToast('WhatsApp recipient saved!');
+    }
+
+    function exportDataJson() {
+      const backup = {
+        exportedAt: new Date().toISOString(),
+        anviExams: exams,
+        anviEvents: events
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Anvi_ICSE_Tracker_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Backup downloaded successfully!');
+    }
+
+    function importDataJson(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (Array.isArray(parsed.anviExams) && Array.isArray(parsed.anviEvents)) {
+            exams = parsed.anviExams;
+            events = parsed.anviEvents;
+            saveData();
+            renderDashboard();
+            renderExams();
+            renderEvents();
+            renderReminders();
+            closeBackupModal();
+            showToast('Backup imported successfully!');
+          } else {
+            showToast('Invalid backup format.', true);
+          }
+        } catch (err) {
+          showToast('Failed to parse file.', true);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetToSampleData() {
+      if (confirmDialog("Reset Data", "Restore initial starter prelims for Anvi? Your current entries will be replaced.")) {
+        exams = [...SAMPLE_EXAMS];
+        events = [...SAMPLE_EVENTS];
+        saveData();
+        renderDashboard();
+        renderExams();
+        renderEvents();
+        renderReminders();
+        closeBackupModal();
+        showToast('Restored starter sample data.');
+      }
+    }
+
+    function promptAddToHome() {
+      showToast('On Mobile: Tap "Share" icon in Safari / Chrome and choose "Add to Home Screen" 📱');
+    }
+
+    // UTILITIES
+    function formatDate(dateInput) {
+      if (!dateInput) return '';
+      const d = new Date(dateInput);
+      return d.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toastMessage');
+      const text = document.getElementById('toastText');
+      const icon = document.getElementById('toastIcon');
+
+      text.textContent = message;
+      if (isError) {
+        icon.className = 'ph-bold ph-warning-circle text-rose-400';
+      } else {
+        icon.className = 'ph-bold ph-check text-emerald-400';
+      }
+
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+        toast.classList.remove('opacity-100');
+      }, 3200);
+    }
+
+    function confirmDialog(title, message) {
+      // Clean inline fallback without blocking browser alert
+      return window.confirm(`${title}\n\n${message}`);
+    }
+
+    function escapeJs(str) {
+      return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function fireConfetti() {
+      try {
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.7 }
+          });
+        }
+      } catch (e) {
+        // Safe fallback
+      }
+    }
+  </script>
+</body>
+</html>
